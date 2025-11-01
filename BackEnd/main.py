@@ -1,4 +1,3 @@
-import os
 from gemini_api import generate_image, generate_text
 from auth import get_current_user, create_access_token, verify_access_token
 
@@ -38,7 +37,7 @@ API endpoint to process data
 async def root():
     return {"message": "Welcome to the Text Generation API!"}
 
-@app.post("/signup", response_model=schemas.UserResponse)
+@app.post("/signup", status_code=status.HTTP_201_CREATED)
 def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
     existing = db.query(models.User).filter(models.User.username == user.username).first()
     if existing:
@@ -51,17 +50,27 @@ def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"user_id": new_user.id})
     return JSONResponse(content = {"username": new_user.username, "access_token": access_token, "token_type": "bearer"})
 
-@app.post("/login")
+@app.post("/login", status_code=status.HTTP_200_OK)
 def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if not db_user or not utils.verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
-    # ✅ Create JWT token
     access_token = create_access_token(data={"user_id": db_user.id})
     return JSONResponse(content = {"username": user.username, "access_token": access_token, "token_type": "bearer"})
 
-@app.get("/profile")
+@app.post("/forget-password", status_code=status.HTTP_200_OK)
+def forget_password(user: schemas.UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.username == user.username).first()
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    db_user.hashed_password = utils.hash_password(user.password)
+    
+    db.commit()
+    db.refresh(db_user)
+    return JSONResponse(content = {"message": "Password reset successful."})
+
+@app.get("/profile", status_code=status.HTTP_200_OK)
 def get_profile(
     current_user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -76,7 +85,6 @@ def delete_user(
     username: str,
     db: Session = Depends(get_db),
 ):
-    # Optional: restrict to admin users later if needed
     user = db.query(models.User).filter(models.User.username == username).first()
 
     if not user:
@@ -84,10 +92,9 @@ def delete_user(
 
     db.delete(user)
     db.commit()
-    return JSONResponse(content = {"detail": f"User {username} deleted successfully"})
+    return {"detail": "User deleted successfully"}
 
-
-@app.post("/gen_text")
+@app.post("/gemini/gen_text", status_code=status.HTTP_200_OK)
 async def process_data(request: Request):
      # Or check the latest supported name
     data = await request.json()
@@ -95,7 +102,7 @@ async def process_data(request: Request):
 
     return JSONResponse(content={"success": True, "message": generate_text(prompt)})
 
-@app.post("/gen_image")
+@app.post("/gemini/gen_image", status_code=status.HTTP_200_OK)
 async def generate_image(request: Request):
     data = await request.json()
     prompt = data.get('prompt')
