@@ -1,6 +1,6 @@
 # HackTutor
 
-HackTutor is an end-to-end AI tutoring platform that combines a FastAPI backend, a React front end, and a retrieval-augmented content pipeline to generate lessons, diagrams, images, audio narration, and even rendered videos on demand. The project integrates Google Gemini models for text and media generation, enriches lessons with a hybrid Whoosh + Qdrant retriever, and surfaces the experience through a Material UI-powered single-page app. 【F:BackEnd/main.py†L1-L482】【F:FrontEnd/src/App.jsx†L1-L25】
+HackTutor is an end-to-end AI tutoring platform that combines a FastAPI backend, a React front end, and a retrieval-augmented content pipeline to generate lessons, diagrams, images, audio narration, and even rendered videos on demand. The project integrates Google Gemini models for text and media generation, enriches lessons with a hybrid Whoosh + Qdrant retriever, and surfaces the experience through a Material UI-powered single-page app. 
 
 ## Architecture
 
