@@ -64,7 +64,7 @@ async def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     return JSONResponse(content = {"username": user.username, "access_token": access_token, "token_type": "bearer"})
 
 @app.post("/forget-password", status_code=status.HTTP_200_OK)
-def forget_password(user: schemas.UserLogin, db: Session = Depends(get_db)):
+async def forget_password(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -75,7 +75,7 @@ def forget_password(user: schemas.UserLogin, db: Session = Depends(get_db)):
     return JSONResponse(content = {"message": "Password reset successful."})
 
 @app.get("/profile", status_code=status.HTTP_200_OK)
-def get_profile(
+async def get_profile(
     current_user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -85,7 +85,7 @@ def get_profile(
     return JSONResponse(content = {"username": user.username, "name": user.name, "session_ids": session_ids})
 
 @app.get("/get-all", status_code=status.HTTP_200_OK)
-def get_user_profiles(
+async def get_user_profiles(
     db: Session = Depends(get_db),
 ):
     users = db.query(models.User).all()
@@ -93,7 +93,7 @@ def get_user_profiles(
     return JSONResponse(content={"users": user_list})
 
 @app.delete("/users/{username}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(
+async def delete_user(
     username: str,
     db: Session = Depends(get_db),
 ):
@@ -107,11 +107,11 @@ def delete_user(
     return {"detail": "User deleted successfully"}
 
 @app.get("/logout", status_code=status.HTTP_200_OK)
-def logout():
+async def logout():
     return JSONResponse(content={"message": "Logout successful."})
 
 @app.post("/change-name", status_code=status.HTTP_200_OK)
-def change_name(
+async def change_name(
     new_name: str,
     current_user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -145,7 +145,7 @@ async def generate_audio_from_prompt(request: Request):
     return JSONResponse(content={"success": True, "audio": generate_audio(prompt)})
 
 @app.post("/chat/new", status_code=status.HTTP_201_CREATED)
-def create_chat_session(current_user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+async def create_chat_session(current_user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
     new_session = models.Chat_Session(
         session_id=uuid4(),
         user_id=current_user_id,
@@ -168,7 +168,10 @@ def create_chat_session(current_user_id: int = Depends(get_current_user), db: Se
     return {"session_id": str(new_session.session_id), "message": "New chat session created"}
 
 @app.post("/chat/{session_id}/message", status_code=status.HTTP_200_OK)
-def send_message(session_id: str, prompt: str, current_user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+async def send_message(session_id: str, request: Request, current_user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    data = await request.json()
+    prompt = data.get('prompt')
+
     chat_session = db.query(models.Chat_Session).filter(models.Chat_Session.session_id == session_id).first()
     if not chat_session:
         raise HTTPException(status_code=404, detail="Chat session not found")
@@ -205,7 +208,7 @@ def send_message(session_id: str, prompt: str, current_user_id: int = Depends(ge
     return {"message": output}
 
 @app.get("/chat/{session_id}/messages", status_code=status.HTTP_200_OK)
-def get_chat_messages(session_id: str, current_user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+async def get_chat_messages(session_id: str, current_user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
 
     chat_session = db.query(models.Chat_Session).filter(models.Chat_Session.session_id == session_id).first()
     if not chat_session:
