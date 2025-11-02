@@ -20,7 +20,6 @@ TEXT_MODEL_2 = 'gemini-2.0-flash'
 TEXT_MODEL_25 = 'gemini-2.5-flash'
 IMAGE_MODEL_NAME = 'gemini-2.0-flash-preview-image-generation' # Or check the latest supported name
 
-
 def config_model():
     global client, chat_agent
     try:
