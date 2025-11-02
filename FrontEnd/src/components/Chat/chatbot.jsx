@@ -110,6 +110,13 @@ const Chatbot = () => {
           aiReplySegments.push({ type: "error", content: err.message });
         }
       }
+      else if (seg.kind === "image") {
+        console.log(seg);
+        let imgPath = seg.image_url;
+        imgPath = imgPath.replace("http://localhost:8000/", `${backendUrl}`);
+        const imgHtml = `<img src="${imgPath}" alt="${seg.image_prompt}" style="width: 200px; height: auto;" />`;
+        aiReplySegments.push({ type: "img", content: imgHtml });
+      }
       aiReplySegments.push({ type: "markdown", content: (seg.text + "\n\n") });
     }
     return aiReplySegments;
