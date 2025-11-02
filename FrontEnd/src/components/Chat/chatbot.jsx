@@ -22,9 +22,7 @@ const Chatbot = () => {
   const [currentSessionId, setCurrentSessionId] = useState(sessionId || null)
   const [isGeneratingSession, setIsGeneratingSession] = useState(false)
 
-  const [messages, setMessages] = useState([
-    { sender: "ai", text: "👋 Hi! I'm your AI tutor. What topic would you like to explore today?" },
-  ])
+  const [messages, setMessages] = useState([])
 
 
   const [loading, setLoading] = useState(false)
@@ -87,9 +85,7 @@ const Chatbot = () => {
       setRecentChats(updatedRecentChats)
       setCurrentSessionId(newSessionId)
       setHasSession(true)
-      setMessages([
-        { sender: "ai", text: "👋 Hi! I'm your AI tutor. What topic would you like to explore today?" },
-      ])
+      setMessages([])
       navigate(`/chat/${newSessionId}`)
     } catch (error) {
       console.error("[v0] Error generating session:", error)
@@ -135,10 +131,11 @@ const Chatbot = () => {
       const data = await res.json()
       console.log("Backend response data:", data)
 
-      const ai = await constructAIReply(segments)
+      const ai = await constructAIReply(data.segments)
       console.log("AI Reply:", ai)
       setMessages([...newMessages, { sender: "ai", text: ai }])
-    } catch {
+    } catch (error) {
+      console.error("[v0] Error sending message:", error)
       setMessages([...newMessages, { sender: "ai", text: "⚠️ Error: Unable to reach backend." }])
     } finally {
       setLoading(false)
