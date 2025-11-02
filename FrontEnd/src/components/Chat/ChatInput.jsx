@@ -1,5 +1,5 @@
 // src/components/Chat/ChatInput.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaPaperPlane } from "react-icons/fa";
 import "../../css/chatbot.css";
 
@@ -11,8 +11,6 @@ const ChatInput = ({ onSend, disabled }) => {
     onSend(input, type);
     setInput("");
   };
-
-
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -44,7 +42,7 @@ const ChatInput = ({ onSend, disabled }) => {
       <button onClick={() => handleSend('img')} disabled={disabled}>
         <FaPaperPlane style={{ marginRight: "6px" }} /> Send
       </button>
-      <button onClick={handleDownload} disabled={disabled}>
+      <button onClick={() => handleSend('vid')} disabled={disabled}>
         <FaPaperPlane style={{ marginRight: "6px" }} /> Generate Video
       </button>
     </footer>
