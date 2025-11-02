@@ -227,6 +227,13 @@
   color: #e6e8f3;
 }
 
+.message.model {
+  align-self: flex-start;
+  background-color: #2f344d;
+  border: 1px solid #3f4560;
+  color: #e6e8f3;
+}
+
 /* ================================
    Input Section
 ================================ */

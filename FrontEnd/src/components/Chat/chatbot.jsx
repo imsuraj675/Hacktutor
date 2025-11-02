@@ -19,15 +19,7 @@ const Chatbot = ({ sessionId }) => {
     { sender: "ai", text: "👋 Hi! I'm your AI tutor. What topic would you like to explore today?" },
   ])
   const [loading, setLoading] = useState(false)
-  const [recentChats, setRecentChats] = useState([
-    { id: 1, title: "JavaScript Basics", timestamp: "Today" },
-    { id: 2, title: "React Hooks", timestamp: "Yesterday" },
-    { id: 3, title: "CSS Grid Layouts", timestamp: "2 days ago" },
-    { id: 4, title: "Python Data Structures", timestamp: "3 days ago" },
-    { id: 5, title: "Web Design Principles", timestamp: "1 week ago" },
-  ])
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [currentChatId, setCurrentChatId] = useState(null)
   const chatEndRef = useRef(null)
 
   useEffect(() => {
@@ -49,6 +41,9 @@ const Chatbot = ({ sessionId }) => {
       const newSessionId = data.session_id
       setCurrentSessionId(newSessionId)
       setHasSession(true)
+      setMessages([
+        { sender: "ai", text: "👋 Hi! I'm your AI tutor. What topic would you like to explore today?" },
+      ])
       navigate(`/chat/${newSessionId}`)
     } catch (error) {
       console.error("[v0] Error generating session:", error)
@@ -68,10 +63,10 @@ const Chatbot = ({ sessionId }) => {
     setLoading(true)
 
     try {
-      const res = await fetch("http://localhost:8000/process", {
+      const res = await fetch(`http://localhost:8000/chat/${currentSessionId}/message`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text, sessionId: currentSessionId }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
+        body: JSON.stringify({ prompt: text }),
       })
       const data = await res.json()
       const aiReply = data.message || "Hmm, I didn't quite catch that."
@@ -83,30 +78,26 @@ const Chatbot = ({ sessionId }) => {
     }
   }
 
-  const handleNewChat = () => {
-    const newChat = {
-      id: Date.now(),
-      title: "New Chat",
-      timestamp: "now",
-    }
-    setRecentChats([newChat, ...recentChats])
-    setMessages([{ sender: "ai", text: "👋 Hi! I'm your AI tutor. What topic would you like to explore today?" }])
-    setCurrentChatId(newChat.id)
-  }
-
-  const handleLoadChat = (chatId) => {
-    setCurrentChatId(chatId)
-    setMessages([{ sender: "ai", text: "Loading chat..." }])
+  const handleLoadChat = async (chatId) => {
+    setCurrentSessionId(chatId)
+    const res = await fetch(`http://localhost:8000/chat/${chatId}/messages`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
+    })
+    const data = await res.json()
+    console.log("Loaded chat data:", data)
+    const loadedMessages = data.messages || []
+    setMessages(loadedMessages)
+    setHasSession(true)
   }
 
   if (!hasSession) {
     return (
       <Box className="chatbot-wrapper">
         <ChatSidebar
-          recentChats={recentChats}
-          onNewChat={handleNewChat}
+          onNewChat={handleStartChat}
           onLoadChat={handleLoadChat}
-          currentChatId={currentChatId}
+          currentChatId={currentSessionId}
           sidebarOpen={sidebarOpen}
         />
 
@@ -159,10 +150,9 @@ const Chatbot = ({ sessionId }) => {
   return (
     <Box className="chatbot-wrapper">
       <ChatSidebar
-        recentChats={recentChats}
-        onNewChat={handleNewChat}
+        onNewChat={handleStartChat}
         onLoadChat={handleLoadChat}
-        currentChatId={currentChatId}
+        currentChatId={currentSessionId}
         sidebarOpen={sidebarOpen}
       />
 
@@ -180,7 +170,7 @@ const Chatbot = ({ sessionId }) => {
 
         <Box className="chatbot-messages">
           {messages.map((msg, i) => (
-            <ChatMessage key={i} sender={msg.sender} text={msg.text} />
+            <ChatMessage key={i} sender={msg.sender} text={msg.text || msg.content} />
           ))}
           {loading && (
             <Box className="message ai">

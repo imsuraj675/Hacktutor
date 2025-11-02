@@ -1,10 +1,42 @@
 "use client"
+import React, { useState, useEffect } from "react"
 import { Box, Button } from "@mui/material"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPlus, faComment, faClock } from "@fortawesome/free-solid-svg-icons"
 import "../../css/chatbot.css"
 
-const ChatSidebar = ({ recentChats, onNewChat, onLoadChat, currentChatId, sidebarOpen }) => {
+const ChatSidebar = ({onNewChat, onLoadChat, currentChatId, sidebarOpen }) => {
+  const token = localStorage.getItem("token")
+  const [user, setUser] = useState(null);
+  const [recentChats, setRecentChats] = useState([])
+
+
+  const checkLoginStatus = async () => {
+    const token = localStorage.getItem("token");
+    console.log(token);
+    const res = await fetch("http://localhost:8000/profile", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await res.json();
+    console.log(data);
+    return data;
+  }
+
+  useEffect(() => {
+    const getUser = async () => {
+      const userData = await checkLoginStatus();
+      console.log("User Data:", userData);
+      if (userData.username) setUser(userData.username);
+      if (userData.session_ids) setRecentChats(userData.session_ids);
+      console.log("Recent Chats:", recentChats);
+    };
+    getUser();
+  }, []);
+
   return (
     <Box className={`sidebar-container ${sidebarOpen ? "open" : "closed"}`}>
       {/* Sidebar Header */}

@@ -80,8 +80,8 @@ async def get_profile(
     db: Session = Depends(get_db)
 ):
     user = db.query(models.User).filter(models.User.id == current_user_id).first()
-    session_id_objects = db.query(models.Chat_Session.session_id).filter(models.Chat_Session.user_id == current_user_id).all()
-    session_ids = [{"id": str(sid.session_id), "timestamp": sid.created_at} for sid in session_id_objects]
+    session_id_objects = db.query(models.Chat_Session).filter(models.Chat_Session.user_id == current_user_id).all()
+    session_ids = [{"id": str(sid.session_id), "timestamp": str(sid.created_at)} for sid in session_id_objects]
     return JSONResponse(content = {"username": user.username, "name": user.name, "session_ids": session_ids})
 
 @app.get("/get-all", status_code=status.HTTP_200_OK)
@@ -151,16 +151,6 @@ async def create_chat_session(current_user_id: int = Depends(get_current_user), 
         user_id=current_user_id,
         created_at=datetime.now()
     )
-    new_message = models.Message(
-        session_id=new_session.session_id,
-        sender="system",
-        content="""You are a helpful assistant named HackTutor, 
-                    you are not made by other organization or team, and you are only known by this name.
-                    Always help the user to the best of your abilities.""",
-        created_at=datetime.now()
-        
-    )
-    db.add(new_message)
     db.add(new_session)
     db.commit()
     db.refresh(new_session)
@@ -228,7 +218,7 @@ async def get_chat_messages(session_id: str, current_user_id: int = Depends(get_
         {
             "sender": msg.sender,
             "content": msg.content,
-            "timestamp": msg.created_at,
+            "timestamp": str(msg.created_at),
             "mermaid_code": msg.mermaid_code,
             "img": msg.img
         }
