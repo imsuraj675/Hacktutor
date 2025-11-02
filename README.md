@@ -6,11 +6,13 @@ HackTutor is an end-to-end AI tutoring platform that combines a FastAPI backend,
 
 | Layer | Description |
 | ----- | ----------- |
-| Front end | React + Vite application with Material UI components for onboarding, chat, and lesson playback. 【F:FrontEnd/src/App.jsx†L1-L25】【F:FrontEnd/src/components/HomePage.jsx†L39-L149】 |
-| API | FastAPI service orchestrating authentication, chat sessions, lesson generation, asset rendering, and video authoring. 【F:BackEnd/main.py†L39-L482】 |
-| Retrieval | Hybrid retriever that blends BM25 (Whoosh) and dense embeddings (Qdrant + Sentence Transformers) with Maximal Marginal Relevance diversification. 【F:BackEnd/retrieval/hybrid_search.py†L12-L129】 |
-| Media services | Gemini-backed generators plus local utilities for gTTS audio, Mermaid diagrams, and MoviePy video assembly. 【F:BackEnd/gemini_api.py†L9-L73】【F:BackEnd/utils.py†L1-L10】【F:BackEnd/media/pipeline.py†L1-L39】【F:BackEnd/gen_video.py†L286-L335】 |
-| Data layer | SQLAlchemy models persisted via the `DB_URL` connection string; chat artifacts are cached to disk for replay. 【F:BackEnd/db_setup/db_setup.py†L1-L19】【F:BackEnd/db_setup/models.py†L6-L33】【F:BackEnd/main.py†L53-L268】 |
+| Front end | React + Vite application with Material UI components for onboarding, chat, and lesson playback.  |
+| API | FastAPI service orchestrating authentication, chat sessions, lesson generation, asset rendering, and video authoring.  |
+| Retrieval | Hybrid retriever that blends BM25 (Whoosh) and dense embeddings (Qdrant + Sentence Transformers) with Maximal Marginal Relevance diversification.  |
+| Media services | Gemini-backed generators plus local utilities for gTTS audio, Mermaid diagrams, and MoviePy video assembly. |
+| Data layer | SQLAlchemy models persisted via the `DB_URL` connection string; chat artifacts are cached to disk for replay.  |
+
+[![System architecture diagram](https://i.ibb.co/JjntKQdx/Untitled-Diagram-drawio-3.png)](https://ibb.co/1GZQL6ns)
 
 ### Repository layout
 
@@ -34,17 +36,17 @@ Hacktutor/
 
 ## Key features
 
-- **User management & persistent chat history** – JWT-protected signup, login, profile, and session APIs backed by SQLAlchemy models for users, chat sessions, and messages. 【F:BackEnd/main.py†L69-L268】【F:BackEnd/db_setup/models.py†L6-L33】
-- **Retrieval-augmented lesson planning** – Conversations are normalized into task specs, expanded with hybrid search notes, and transformed into multi-segment lessons enriched with diagrams and image prompts. 【F:BackEnd/main.py†L311-L482】【F:BackEnd/retrieval/hybrid_search.py†L12-L129】【F:BackEnd/retrieval/summarize.py†L1-L47】
-- **Asset rendering pipeline** – Mermaid diagrams are rendered to PNG, image prompts are enriched and generated in parallel, and generated files are exposed via static hosting. 【F:BackEnd/media/pipeline.py†L1-L39】【F:BackEnd/main.py†L424-L482】
-- **Video authoring** – Lesson prompts can trigger an asynchronous slide video workflow that produces narrated videos and stores progress/state per session. 【F:BackEnd/main.py†L270-L309】【F:BackEnd/gen_video.py†L286-L335】
-- **Responsive learner experience** – The front end provides onboarding modals, chat session management, and real-time updates for AI responses using Material UI and React Router. 【F:FrontEnd/src/components/HomePage.jsx†L39-L198】【F:FrontEnd/src/components/Chat/chatbot.jsx†L12-L200】
+- **User management & persistent chat history** – JWT-protected signup, login, profile, and session APIs backed by SQLAlchemy models for users, chat sessions, and messages.
+- **Retrieval-augmented lesson planning** – Conversations are normalized into task specs, expanded with hybrid search notes, and transformed into multi-segment lessons enriched with diagrams and image prompts. 
+- **Asset rendering pipeline** – Mermaid diagrams are rendered to PNG, image prompts are enriched and generated in parallel, and generated files are exposed via static hosting. 
+- **Video authoring** – Lesson prompts can trigger an asynchronous slide video workflow that produces narrated videos and stores progress/state per session. 
+- **Responsive learner experience** – The front end provides onboarding modals, chat session management, and real-time updates for AI responses using Material UI and React Router. 
 
 ## Prerequisites
 
-- Python 3.11+ with `pip` to install backend dependencies listed in `BackEnd/requirements.txt`. 【F:BackEnd/requirements.txt†L1-L63】
-- Node.js 20+ (or any version supported by Vite 7) to run the React client specified in `FrontEnd/package.json`. 【F:FrontEnd/package.json†L1-L42】
-- Qdrant vector database running locally on `localhost:6333` for semantic retrieval. 【F:BackEnd/retrieval/hybrid_search.py†L12-L88】
+- Python 3.11+ with `pip` to install backend dependencies listed in `BackEnd/requirements.txt`. 
+- Node.js 20+ (or any version supported by Vite 7) to run the React client specified in `FrontEnd/package.json`. 
+- Qdrant vector database running locally on `localhost:6333` for semantic retrieval. 
 - FFmpeg (required by MoviePy) if you plan to render narrated videos.
 - Google Gemini API access for text, diagram, and image generation.
 
@@ -66,19 +68,17 @@ Hacktutor/
    ACCESS_TOKEN_EXPIRE_MINUTES=4320
    GEMINI_TEXT_MODEL=gemini-2.0-flash
    ```
-   The API key powers Gemini calls, the database URL is passed to SQLAlchemy, and JWT secrets configure token issuing. 【F:BackEnd/gemini_api.py†L9-L35】【F:BackEnd/db_setup/db_setup.py†L1-L11】【F:BackEnd/auth.py†L10-L22】
+   The API key powers Gemini calls, the database URL is passed to SQLAlchemy, and JWT secrets configure token issuing. 
 3. **Prepare retrieval indexes (optional but recommended)**
    - Add EPUB files to `BackEnd/data/epubs/`.
    - Ensure Qdrant is running, then build the semantic index:
      ```bash
      python ingest/build_qdrant.py
      ```
-     【F:BackEnd/ingest/build_qdrant.py†L1-L45】
    - Build the BM25 index:
      ```bash
      python ingest/build_whoosh.py
      ```
-     【F:BackEnd/ingest/build_whoosh.py†L1-L37】
 4. **Run the API server**
    ```bash
    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
@@ -89,12 +89,12 @@ Hacktutor/
 
 | Endpoint | Method | Purpose |
 | -------- | ------ | ------- |
-| `/signup`, `/login`, `/logout`, `/forget-password`, `/change-name` | POST/GET | Account lifecycle & credentials. 【F:BackEnd/main.py†L69-L149】 |
-| `/profile`, `/chat/new`, `/chat/{session_id}/messages` | GET/POST | Fetch account info, open sessions, and replay saved conversations. 【F:BackEnd/main.py†L102-L268】 |
-| `/chat/{session_id}/message` | POST | Generate a fresh lesson response for the active session. 【F:BackEnd/main.py†L185-L232】 |
-| `/chat/{session_id}/video` | POST | Launch background slide video rendering; poll the response to track progress. 【F:BackEnd/main.py†L270-L309】 |
-| `/normalize`, `/helpful-notes`, `/generate` | POST | Structured RAG pipeline for lesson planning and drafting. 【F:BackEnd/main.py†L311-L349】 |
-| `/gemini/gen_text`, `/gemini/gen_image`, `/gemini/gen_audio` | POST | Thin wrappers around Gemini text, image, and gTTS audio generation. 【F:BackEnd/main.py†L150-L171】【F:BackEnd/utils.py†L1-L10】 |
+| `/signup`, `/login`, `/logout`, `/forget-password`, `/change-name` | POST/GET | Account lifecycle & credentials.  |
+| `/profile`, `/chat/new`, `/chat/{session_id}/messages` | GET/POST | Fetch account info, open sessions, and replay saved conversations. |
+| `/chat/{session_id}/message` | POST | Generate a fresh lesson response for the active session.  |
+| `/chat/{session_id}/video` | POST | Launch background slide video rendering; poll the response to track progress.  |
+| `/normalize`, `/helpful-notes`, `/generate` | POST | Structured RAG pipeline for lesson planning and drafting.  |
+| `/gemini/gen_text`, `/gemini/gen_image`, `/gemini/gen_audio` | POST | Thin wrappers around Gemini text, image, and gTTS audio generation. |
 
 ## Frontend setup
 
@@ -107,32 +107,28 @@ Hacktutor/
    ```env
    VITE_BACKEND_URL=http://localhost:8000/
    ```
-   Both the router shell and feature components read this variable to call the API. 【F:FrontEnd/src/App.jsx†L9-L22】【F:FrontEnd/src/components/HomePage.jsx†L39-L149】【F:FrontEnd/src/components/Chat/chatbot.jsx†L12-L143】
+   Both the router shell and feature components read this variable to call the API.
 2. **Run the development server**
    ```bash
    npm run dev
    ```
-3. **Lint the UI (optional)**
-   ```bash
-   npm run lint
-   ```
 
 ### Frontend highlights
 
-- Landing page with responsive hero, feature highlights, and auth modals for signup/login/reset flows. 【F:FrontEnd/src/components/HomePage.jsx†L39-L198】
-- Chat workspace featuring session sidebar management, conversation replay, and streaming AI replies. 【F:FrontEnd/src/components/Chat/chatbot.jsx†L12-L200】
+- Landing page with responsive hero, feature highlights, and auth modals for signup/login/reset flows. 
+- Chat workspace featuring session sidebar management, conversation replay, and streaming AI replies. 
 - Markdown + Mermaid-friendly rendering for lesson segments (see `src/components` and `MermaidRenderer.jsx`).
 
 ## Media & artifacts
 
-- Generated lesson assets are stored in `BackEnd/artifacts/<run_id>/` with `/diagrams` and `/images` subfolders, along with accessible HTTP URLs added to the lesson payload. 【F:BackEnd/media/pipeline.py†L1-L39】【F:BackEnd/main.py†L424-L482】
-- Full-motion videos are persisted per session, and narration text is cached on the corresponding `Chat_Session`. 【F:BackEnd/gen_video.py†L286-L335】【F:BackEnd/main.py†L270-L309】
-- Conversation outputs are serialized as pickled lesson drafts in `BackEnd/local_data/` for quick replay. 【F:BackEnd/main.py†L225-L268】
+- Generated lesson assets are stored in `BackEnd/artifacts/<run_id>/` with `/diagrams` and `/images` subfolders, along with accessible HTTP URLs added to the lesson payload. 
+- Full-motion videos are persisted per session, and narration text is cached on the corresponding `Chat_Session`. 
+- Conversation outputs are serialized as pickled lesson drafts in `BackEnd/local_data/` for quick replay. 
 
 ## Development tips
 
-- Keep your Gemini quota usage in mind; lesson generation calls the API multiple times per request (normalize, notes, lesson, and optional repairs). 【F:BackEnd/main.py†L311-L482】
-- When running ingestion on large corpora, monitor memory usage; the scripts flush batches to Qdrant and Whoosh incrementally to avoid overflows. 【F:BackEnd/ingest/build_qdrant.py†L23-L41】【F:BackEnd/ingest/build_whoosh.py†L21-L34】
+- Keep your Gemini quota usage in mind; lesson generation calls the API multiple times per request (normalize, notes, lesson, and optional repairs). 
+- When running ingestion on large corpora, monitor memory usage; the scripts flush batches to Qdrant and Whoosh incrementally to avoid overflows. 
 - For production deployments, swap the sample SQLite URL with Postgres or another supported backend by adjusting `DB_URL`.
 
 ## Useful commands
