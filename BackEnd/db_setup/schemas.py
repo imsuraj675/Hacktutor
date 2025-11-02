@@ -19,7 +19,7 @@ class UserResponse(BaseModel):
 # ---- Core types ----
 OutputKind = Literal["text", "diagram", "image", "audio", "video"]
 TextDepth = Literal["brief", "detailed", "very_detailed"]
-SegmentKind = Literal["content", "diagram", "image"]
+SegmentKind = Literal["content", "diagram", "image", "video"]
 
 class NormalizeRequest(BaseModel):
     chat: str

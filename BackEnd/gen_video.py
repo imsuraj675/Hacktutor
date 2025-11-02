@@ -28,10 +28,11 @@ import base64
 import logging
 from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
+from db_setup import models
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field, ValidationError, field_validator
-
+from sqlalchemy.orm import Session
 # Gemini SDK
 from google import genai
 from google.genai import types as gtypes
@@ -282,10 +283,13 @@ def _assemble_video(slide_media: list[tuple[Path, Path]],
 # ----------------------------------------------------------------------
 # Public API
 # ----------------------------------------------------------------------
-def createVideo(topic_prompt: str,
+async def createVideo(topic_prompt: str,
+                db: Session,
+                session_id: str,
                 out_path: str = "video.mp4",
                 model: str = "gemini-2.5-flash",
-                workdir: str = "artifacts") -> str:
+                workdir: str = "samya_artifacts",
+                ) -> str:
     """
     - Plans slides with Gemini
     - Calls your generate_image()/generate_audio() per slide
@@ -323,7 +327,14 @@ def createVideo(topic_prompt: str,
 
     out = _assemble_video(media_for_assembly, Path(out_path))
     log.info(f"Video written to: {out}")
-    return str(out)
+
+    chat_session = db.query(models.Chat_Session).filter(models.Chat_Session.session_id == session_id).first()
+    chat_session.video_progress = "Success"
+    chat_session.video_path = str(out)
+    chat_session.video_text = '\n\n'.join([s.narration_text for s in slides])
+    db.commit()
+
+    # return str(out)
 
 
 # ----------------------------------------------------------------------

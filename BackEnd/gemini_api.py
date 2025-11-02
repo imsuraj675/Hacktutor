@@ -304,7 +304,7 @@ def normalize_task(chat: str, defaults: Optional[Dict[str, Any]] = None, model: 
 
     return data
 
-def generate_lesson(task_spec: Dict[str, Any], helpful_notes: List[str], model: Optional[str] = None) -> Dict[str, Any]:
+def generate_lesson(messages: list, task_spec: Dict[str, Any], helpful_notes: List[str], model: Optional[str] = None, ) -> tuple:
     model_name = model or DEFAULT_TEXT_MODEL
 
     structure_hint = (
@@ -356,12 +356,26 @@ def generate_lesson(task_spec: Dict[str, Any], helpful_notes: List[str], model: 
         "Produce the lesson now. Return ONLY valid JSON without code fences. Start with '{' and end with '}'."
     )
 
-    res = client.models.generate_content(
+    # res = client.models.generate_content(
+    #     model=model_name,
+    #     contents=f"{system}\n\n{prompt}",
+    #     config=types.GenerateContentConfig(response_modalities=["TEXT"]),
+    # )
+
+    history = [
+        {"role": msg.sender, "parts": [types.Part(text=msg.content)]}
+        for msg in messages
+    ]
+
+    chat_agent = client.chats.create(
         model=model_name,
-        contents=f"{system}\n\n{prompt}",
-        config=types.GenerateContentConfig(response_modalities=["TEXT"]),
+        history=history,
+        config={"system_instruction": SYSTEM_PROMPT + system, "response_modalities": ["TEXT"]}
     )
-    text = res.candidates[0].content.parts[0].text if res.candidates else ""
+    response = chat_agent.send_message(prompt)
+    
+    text = response.text
+    # text = res.candidates[0].content.parts[0].text if res.candidates else ""
     data = _extract_json(text)
     # sanitize before returning
     return sanitize_lesson(data)
