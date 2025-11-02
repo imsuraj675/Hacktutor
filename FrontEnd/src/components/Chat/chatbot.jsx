@@ -9,6 +9,7 @@ import ChatSidebar from "./ChatSidebar"
 import "../../css/chatbot.css"
 
 const Chatbot = () => {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const { sessionId } = useParams();
   console.log("Chatbot component loaded with id:", sessionId)
   const token = localStorage.getItem("token")
@@ -33,7 +34,7 @@ const Chatbot = () => {
   const checkLoginStatus = async () => {
     const token = localStorage.getItem("token");
     console.log(token);
-    const res = await fetch("http://localhost:8000/profile", {
+    const res = await fetch(`${backendUrl}profile`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -66,7 +67,7 @@ const Chatbot = () => {
   const handleStartChat = async () => {
     setIsGeneratingSession(true)
     try {
-      const response = await fetch("http://localhost:8000/chat/new", {
+      const response = await fetch(`${backendUrl}chat/new`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
       })
@@ -96,6 +97,15 @@ const Chatbot = () => {
     }
   }
 
+  const constructAIReply = (segments) => {
+    let aiReply = ""
+    for (let seg of segments) {
+      aiReply += seg.section + ":\n"
+      aiReply += seg.text + "\n\n"
+    }
+    return aiReply || "Hmm, I didn't quite catch that."
+  }
+
   const handleSend = async (text) => {
     if (!text.trim()) return
 
@@ -104,15 +114,17 @@ const Chatbot = () => {
     setLoading(true)
 
     try {
-      const res = await fetch(`http://localhost:8000/chat/${currentSessionId}/message`, {
+      const res = await fetch(`${backendUrl}chat/${currentSessionId}/message`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
         body: JSON.stringify({ prompt: text }),
       })
       const data = await res.json()
-      const aiReply = data.message || "Hmm, I didn't quite catch that."
-      console.log("AI Reply:", aiReply)
-      setMessages([...newMessages, { sender: "ai", text: aiReply }])
+      console.log("Backend response data:", data)
+
+      const ai = constructAIReply(segments)
+      console.log("AI Reply:", ai)
+      setMessages([...newMessages, { sender: "ai", text: ai }])
     } catch {
       setMessages([...newMessages, { sender: "ai", text: "⚠️ Error: Unable to reach backend." }])
     } finally {
@@ -123,28 +135,43 @@ const Chatbot = () => {
   const handleLoadChat = async (chatId) => {
     setMessages([])
     const initialMessage = { sender: "ai", text: "👋 Hi! I'm your AI tutor. What topic would you like to explore today?" }
-    // setMessages([initialMessage])
     setLoading(true)
     setCurrentSessionId(chatId)
-    const res = await fetch(`http://localhost:8000/chat/${chatId}/messages`, {
+    const res = await fetch(`${backendUrl}chat/${chatId}/messages`, {
       method: "GET",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, },
     })
     const data = await res.json()
     console.log("Loaded chat data:", data)
-    const loadedMessages = data.messages || []
-    const totalMessages = [initialMessage, ...loadedMessages]
+    const msgs = data.messages
+    let i=0
+    let newMessages = []
+    for(let msg of msgs){
+      let newMsg = {sender: "", text: ""};
+      if(i%2===0){
+        newMsg.sender="user"
+        newMsg.text=msg.content.segments[0].text
+      }
+      else{
+        newMsg.sender="ai"
+        newMsg.text=constructAIReply(msg.content.segments)
+      }
+      i++;
+      newMessages.push(newMsg);
+    }
+    const totalMessages = [initialMessage, ...newMessages]
     setMessages(totalMessages)
     setHasSession(true)
     setLoading(false)
     navigate(`/chat/${chatId}`)
   }
 
-  if (sessionId) {
-    useEffect(() => {
-      handleLoadChat(sessionId)
-    }, [sessionId])
-  }
+  useEffect(() => {
+    if (sessionId) {
+      handleLoadChat(sessionId);
+    }
+  }, [sessionId]);
+
 
   if (!hasSession) {
     return (

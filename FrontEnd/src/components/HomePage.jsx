@@ -37,6 +37,7 @@ import toast from 'react-hot-toast';
 import { redirect } from "react-router-dom"
 
 export default function HomePage() {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down("md"))
     const [openModal, setOpenModal] = useState(null); // "Signup" | "Login" | "Reset" | null
@@ -64,7 +65,7 @@ export default function HomePage() {
     const checkLoginStatus = async () => {
         const token = localStorage.getItem("token");
         console.log(token);
-        const res = await fetch("http://localhost:8000/profile", {
+        const res = await fetch(`${backendUrl}profile`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -105,9 +106,9 @@ export default function HomePage() {
 
         try {
             const endpointMap = {
-                Signup: "http://localhost:8000/signup",
-                Login: "http://localhost:8000/login",
-                Reset: "http://localhost:8000/forget-password",
+                Signup: `${backendUrl}signup`,
+                Login: `${backendUrl}login`,
+                Reset: `${backendUrl}forget-password`,
             };
             console.log(type);
             console.log(endpointMap[type]);
